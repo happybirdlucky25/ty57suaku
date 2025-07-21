@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { mockDataService } from '../services/mockData'
+import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card'
 import { Badge } from './ui/Badge'
 import { Button } from './ui/Button'
@@ -16,51 +19,85 @@ interface NewsItem {
 }
 
 export function Newsfeed() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [newsItems, setNewsItems] = useState<NewsItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // TODO: Replace with actual API call
-    // Simulating API call for now
-    setTimeout(() => {
-      setNewsItems([
-        {
-          id: '1',
-          type: 'bill_update',
-          title: 'HR-1234 Climate Action Bill Passes Committee',
-          description: 'The bill you\'re tracking has moved from committee to floor vote. This represents significant progress toward passage.',
-          timestamp: '2 hours ago',
-          status: 'Passed Committee',
-          relatedId: 'hr-1234'
-        },
-        {
-          id: '2',
-          type: 'legislator_activity',
-          title: 'Sen. Jane Smith Introduces New Healthcare Bill',
-          description: 'Your tracked legislator has introduced S-5678, a comprehensive healthcare reform bill focusing on prescription drug costs.',
-          timestamp: '4 hours ago',
-          relatedId: 'sen-jane-smith'
-        },
-        {
-          id: '3',
-          type: 'campaign_update',
-          title: 'Your "Clean Energy Campaign" Gained 15 New Supporters',
-          description: 'Your advocacy campaign is growing! 15 new members joined and 3 new organizations endorsed your position.',
-          timestamp: '6 hours ago',
-          relatedId: 'campaign-clean-energy'
-        },
-        {
-          id: '4',
+    const loadNewsfeed = async () => {
+      if (!user) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        // Generate dynamic newsfeed based on user's tracked items
+        const [trackedBills, trackedLegislators, campaigns] = await Promise.all([
+          mockDataService.getTrackedBills(user.id),
+          mockDataService.getTrackedLegislators(user.id),
+          mockDataService.getCampaigns(user.id)
+        ])
+
+        const generatedNews: NewsItem[] = []
+
+        // Add bill updates
+        trackedBills.slice(0, 2).forEach((trackedBill, index) => {
+          generatedNews.push({
+            id: `bill-${trackedBill.bill_id}`,
+            type: 'bill_update',
+            title: `${trackedBill.bill.bill_number} Status Update`,
+            description: `Your tracked bill "${trackedBill.bill.title}" has status: ${trackedBill.bill.status}. This represents important progress in the legislative process.`,
+            timestamp: `${index + 2} hours ago`,
+            status: trackedBill.bill.status,
+            relatedId: trackedBill.bill_id
+          })
+        })
+
+        // Add legislator updates
+        trackedLegislators.slice(0, 1).forEach((trackedLeg, index) => {
+          generatedNews.push({
+            id: `leg-${trackedLeg.legislator_id}`,
+            type: 'legislator_activity',
+            title: `${trackedLeg.legislator.full_name} Committee Activity`,
+            description: `Your tracked legislator from ${trackedLeg.legislator.state} has recent activity in the ${trackedLeg.legislator.chamber}. Stay informed on their latest votes and sponsorships.`,
+            timestamp: `${index + 4} hours ago`,
+            relatedId: trackedLeg.legislator_id
+          })
+        })
+
+        // Add campaign updates
+        campaigns.slice(0, 1).forEach((campaign, index) => {
+          generatedNews.push({
+            id: `campaign-${campaign.id}`,
+            type: 'campaign_update',
+            title: `"${campaign.name}" Campaign Update`,
+            description: 'Your campaign is gaining momentum! New supporters have joined and engagement metrics are improving.',
+            timestamp: `${index + 6} hours ago`,
+            relatedId: campaign.id.toString()
+          })
+        })
+
+        // Add general news
+        generatedNews.push({
+          id: 'general-1',
           type: 'general_news',
           title: 'Congressional Schedule: Key Votes This Week',
           description: 'Several important bills are scheduled for votes this week, including infrastructure spending and education funding.',
           timestamp: '1 day ago',
           source: 'Congressional Calendar'
-        }
-      ])
-      setIsLoading(false)
-    }, 1000)
-  }, [])
+        })
+
+        setNewsItems(generatedNews)
+      } catch (error) {
+        console.error('Failed to load newsfeed:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadNewsfeed()
+  }, [user])
 
   const getIcon = (type: NewsItem['type']) => {
     switch (type) {
@@ -86,6 +123,15 @@ export function Newsfeed() {
       default:
         return 'News'
     }
+  }
+
+  const handleItemClick = (item: NewsItem) => {
+    if (item.type === 'bill_update' && item.relatedId) {
+      navigate(`/bill/${item.relatedId}`)
+    } else if (item.type === 'campaign_update' && item.relatedId) {
+      navigate(`/campaign/${item.relatedId}`)
+    }
+    // Add other navigation logic as needed
   }
 
   if (isLoading) {
@@ -132,7 +178,11 @@ export function Newsfeed() {
         ) : (
           <div className="space-y-4">
             {newsItems.map((item) => (
-              <div key={item.id} className="border-l-4 border-blue-200 pl-4 py-3 hover:bg-gray-50 rounded-r">
+              <div 
+                key={item.id} 
+                className="border-l-4 border-blue-200 pl-4 py-3 hover:bg-gray-50 rounded-r cursor-pointer"
+                onClick={() => handleItemClick(item)}
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3 flex-1">
                     {getIcon(item.type)}
@@ -152,7 +202,14 @@ export function Newsfeed() {
                       )}
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleItemClick(item)
+                    }}
+                  >
                     <ExternalLink className="h-4 w-4" />
                   </Button>
                 </div>

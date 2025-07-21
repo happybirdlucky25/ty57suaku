@@ -1,48 +1,116 @@
-import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Search, FileText, User } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
+import { Search, FileText, User, Heart } from 'lucide-react'
+import { mockDataService } from '../services/mockData'
+import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
+import type { Bill, Person } from '../types/database'
 
 export function SearchPage() {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const { user, isAuthenticated } = useAuth()
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
-  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [bills, setBills] = useState<Bill[]>([])
+  const [legislators, setLegislators] = useState<Person[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [activeFilter, setActiveFilter] = useState<'all' | 'bills' | 'legislators' | 'committees'>('all')
+  const [trackingBill, setTrackingBill] = useState<string | null>(null)
+  const [trackingLegislator, setTrackingLegislator] = useState<string | null>(null)
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return
+  // Load initial results on page load if there's a search param
+  useEffect(() => {
+    const initialSearch = searchParams.get('search')
+    const filterType = searchParams.get('type')
+    
+    if (initialSearch) {
+      setSearchQuery(initialSearch)
+      handleSearch(initialSearch)
+    }
+    
+    if (filterType === 'bills') {
+      setActiveFilter('bills')
+    } else if (filterType === 'legislators') {
+      setActiveFilter('legislators')
+    }
+  }, [searchParams])
+
+  const handleSearch = async (query?: string) => {
+    const searchTerm = query || searchQuery
+    if (!searchTerm.trim()) return
     
     setIsLoading(true)
     try {
-      // TODO: Implement actual search functionality
-      // For now, show placeholder results
-      setTimeout(() => {
-        setSearchResults([
-          {
-            id: '1',
-            type: 'bill',
-            title: 'Example Bill HR-1234',
-            description: 'This is an example bill that would appear in search results...',
-            status: 'In Committee'
-          },
-          {
-            id: '2',
-            type: 'legislator',
-            title: 'Sen. Example Name',
-            description: 'Senator from Example State, serves on Finance Committee...',
-            status: 'Active'
-          }
-        ])
-        setIsLoading(false)
-      }, 1000)
+      const results = await mockDataService.search(searchTerm)
+      setBills(results.bills)
+      setLegislators(results.legislators)
     } catch (error) {
       console.error('Search failed:', error)
+    } finally {
       setIsLoading(false)
     }
   }
+
+  const handleTrackBill = async (billId: string) => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    
+    setTrackingBill(billId)
+    try {
+      await mockDataService.trackBill(user.id, billId)
+      // Show success feedback
+      console.log(`Bill ${billId} tracked successfully`)
+    } catch (error) {
+      console.error('Failed to track bill:', error)
+    } finally {
+      setTrackingBill(null)
+    }
+  }
+
+  const handleTrackLegislator = async (legislatorId: string) => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    
+    setTrackingLegislator(legislatorId)
+    try {
+      await mockDataService.trackLegislator(user.id, legislatorId)
+      // Show success feedback
+      console.log(`Legislator ${legislatorId} tracked successfully`)
+    } catch (error) {
+      console.error('Failed to track legislator:', error)
+    } finally {
+      setTrackingLegislator(null)
+    }
+  }
+
+  const handleViewBill = (billId: string) => {
+    navigate(`/bill/${billId}`)
+  }
+
+  const handleViewLegislator = (legislatorId: string) => {
+    navigate(`/legislator/${legislatorId}`)
+  }
+
+  const getFilteredResults = () => {
+    switch (activeFilter) {
+      case 'bills':
+        return { bills, legislators: [] }
+      case 'legislators':
+        return { bills: [], legislators }
+      default:
+        return { bills, legislators }
+    }
+  }
+
+  const filteredResults = getFilteredResults()
+  const totalResults = filteredResults.bills.length + filteredResults.legislators.length
 
   return (
     <div className="space-y-6">
@@ -70,7 +138,7 @@ export function SearchPage() {
                 className="pl-10"
               />
             </div>
-            <Button onClick={handleSearch} loading={isLoading}>
+            <Button onClick={() => handleSearch()} loading={isLoading}>
               {isLoading ? 'Searching...' : 'Search'}
             </Button>
           </div>
@@ -84,49 +152,125 @@ export function SearchPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" size="sm">All</Button>
-            <Button variant="ghost" size="sm">Bills</Button>
-            <Button variant="ghost" size="sm">Legislators</Button>
-            <Button variant="ghost" size="sm">Committees</Button>
+            <Button 
+              variant={activeFilter === 'all' ? 'primary' : 'ghost'} 
+              size="sm"
+              onClick={() => setActiveFilter('all')}
+            >
+              All ({bills.length + legislators.length})
+            </Button>
+            <Button 
+              variant={activeFilter === 'bills' ? 'primary' : 'ghost'} 
+              size="sm"
+              onClick={() => setActiveFilter('bills')}
+            >
+              Bills ({bills.length})
+            </Button>
+            <Button 
+              variant={activeFilter === 'legislators' ? 'primary' : 'ghost'} 
+              size="sm"
+              onClick={() => setActiveFilter('legislators')}
+            >
+              Legislators ({legislators.length})
+            </Button>
+            <Button variant="ghost" size="sm" disabled>
+              Committees (0)
+            </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Search Results */}
-      {searchResults.length > 0 && (
+      {totalResults > 0 && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">
-            Search Results ({searchResults.length})
+            Search Results ({totalResults})
           </h2>
           
-          {searchResults.map((result) => (
-            <Card key={result.id} className="hover:shadow-md transition-shadow cursor-pointer">
+          {/* Bills Results */}
+          {filteredResults.bills.map((bill) => (
+            <Card key={bill.bill_id} className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    {result.type === 'bill' ? (
-                      <FileText className="h-5 w-5 text-blue-600" />
-                    ) : (
-                      <User className="h-5 w-5 text-green-600" />
-                    )}
-                    <div>
-                      <CardTitle className="text-lg">{result.title}</CardTitle>
-                      <CardDescription className="mt-1">
-                        {result.description}
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{bill.bill_number}</CardTitle>
+                      <h3 className="text-base font-medium text-gray-900 mt-1">{bill.title}</h3>
+                      <CardDescription className="mt-1 line-clamp-2">
+                        {bill.description}
                       </CardDescription>
                     </div>
                   </div>
-                  <Badge variant={result.type === 'bill' ? 'secondary' : 'default'}>
-                    {result.status}
+                  <Badge variant="secondary">
+                    {bill.status}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="secondary">
-                    Track {result.type === 'bill' ? 'Bill' : 'Legislator'}
+                  {isAuthenticated ? (
+                    <Button 
+                      size="sm" 
+                      variant="secondary"
+                      onClick={() => handleTrackBill(bill.bill_id)}
+                      loading={trackingBill === bill.bill_id}
+                      className="flex items-center gap-2"
+                    >
+                      <Heart className="h-4 w-4" />
+                      {trackingBill === bill.bill_id ? 'Tracking...' : 'Track Bill'}
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="secondary" onClick={() => navigate('/login')}>
+                      Sign in to Track
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" onClick={() => handleViewBill(bill.bill_id)}>
+                    View Details
                   </Button>
-                  <Button size="sm" variant="ghost">
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Legislators Results */}
+          {filteredResults.legislators.map((legislator) => (
+            <Card key={legislator.people_id} className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <User className="h-5 w-5 text-green-600" />
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{legislator.full_name}</CardTitle>
+                      <CardDescription className="mt-1">
+                        {legislator.party} - {legislator.state} {legislator.chamber}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Badge variant="default">
+                    {legislator.chamber}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  {isAuthenticated ? (
+                    <Button 
+                      size="sm" 
+                      variant="secondary"
+                      onClick={() => handleTrackLegislator(legislator.people_id)}
+                      loading={trackingLegislator === legislator.people_id}
+                      className="flex items-center gap-2"
+                    >
+                      <Heart className="h-4 w-4" />
+                      {trackingLegislator === legislator.people_id ? 'Tracking...' : 'Track Legislator'}
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="secondary" onClick={() => navigate('/login')}>
+                      Sign in to Track
+                    </Button>
+                  )}
+                  <Button size="sm" variant="ghost" onClick={() => handleViewLegislator(legislator.people_id)}>
                     View Details
                   </Button>
                 </div>
@@ -137,7 +281,7 @@ export function SearchPage() {
       )}
 
       {/* Empty State */}
-      {searchResults.length === 0 && searchQuery && !isLoading && (
+      {totalResults === 0 && searchQuery && !isLoading && (
         <Card>
           <CardContent className="text-center py-12">
             <Search className="mx-auto h-12 w-12 text-gray-400" />
@@ -150,7 +294,7 @@ export function SearchPage() {
       )}
 
       {/* Getting Started */}
-      {searchResults.length === 0 && !searchQuery && (
+      {totalResults === 0 && !searchQuery && (
         <Card>
           <CardContent className="text-center py-12">
             <Search className="mx-auto h-12 w-12 text-gray-400" />

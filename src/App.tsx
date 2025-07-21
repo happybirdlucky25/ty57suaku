@@ -7,6 +7,10 @@ import { DashboardPage } from './pages/DashboardPage'
 import { SearchPage } from './pages/SearchPage'
 import { LandingPage } from './pages/LandingPage'
 import { AdminPage } from './pages/AdminPage'
+import { BillDetailPage } from './pages/BillDetailPage'
+import { CampaignsPage } from './pages/CampaignsPage'
+import { ProfilePage } from './pages/ProfilePage'
+import { PricingPage } from './pages/PricingPage'
 import './App.css'
 
 function App() {
@@ -33,11 +37,11 @@ function App() {
           } 
         />
         
-        {/* Placeholder routes for future development */}
-        <Route path="/bill/:id" element={<div>Bill Detail Page - Coming Soon</div>} />
+        {/* Functional pages */}
+        <Route path="/bill/:billId" element={<BillDetailPage />} />
         <Route path="/campaigns" element={
-          <ProtectedRoute requiredRoles={['paid']}>
-            <div>Campaigns Page - Coming Soon</div>
+          <ProtectedRoute requiredRoles={['free', 'paid']}>
+            <CampaignsPage />
           </ProtectedRoute>
         } />
         <Route path="/campaign/:id" element={
@@ -47,10 +51,10 @@ function App() {
         } />
         <Route path="/profile" element={
           <ProtectedRoute requiredRoles={['free', 'paid']}>
-            <div>Profile Page - Coming Soon</div>
+            <ProfilePage />
           </ProtectedRoute>
         } />
-        <Route path="/pricing" element={<div>Pricing Page - Coming Soon</div>} />
+        <Route path="/pricing" element={<PricingPage />} />
         
         {/* 404 Route */}
         <Route path="*" element={<div className="text-center">Page not found</div>} />
