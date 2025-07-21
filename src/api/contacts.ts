@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import { UserContact, ApiResponse } from '../types/database'
+import type { UserContact, ApiResponse } from '../types/database'
 
 export const contactsApi = {
   // Get all contacts for current user

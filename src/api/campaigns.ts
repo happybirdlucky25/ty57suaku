@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import { Campaign, ApiResponse } from '../types/database'
+import type { Campaign, ApiResponse } from '../types/database'
 
 export const campaignsApi = {
   // Get all campaigns for current user

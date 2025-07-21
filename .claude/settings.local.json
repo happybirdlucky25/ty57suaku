@@ -11,7 +11,8 @@
       "Bash(npm install:*)",
       "Bash(curl:*)",
       "Bash(pkill:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }

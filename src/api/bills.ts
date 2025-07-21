@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import { Bill, TrackedBill, ApiResponse } from '../types/database'
+import type { Bill, TrackedBill, ApiResponse } from '../types/database'
 
 export const billsApi = {
   // Get all bills with optional search
