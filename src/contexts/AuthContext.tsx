@@ -21,6 +21,9 @@ interface AuthContextType {
   signOut: () => Promise<void>
   isAuthenticated: boolean
   checkPermission: (action: string, resourceId?: string) => Promise<boolean>
+  // Dev/testing functions
+  setTestUserRole: (role: UserRole) => void
+  isTestMode: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -46,8 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  
+  // Dev/testing state
+  const [testUserRole, setTestUserRole] = useState<UserRole | null>(null)
+  const isTestMode = testUserRole !== null
 
-  const userRole = getUserRole(user)
+  const actualUserRole = getUserRole(user)
+  const userRole = testUserRole || actualUserRole
   const permissions = getPermissions(userRole)
 
   useEffect(() => {
@@ -110,6 +118,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const handleSetTestUserRole = (role: UserRole) => {
+    setTestUserRole(role === actualUserRole ? null : role)
+  }
+
   const value = {
     user,
     session,
@@ -118,7 +130,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     signOut,
     isAuthenticated: !!user,
-    checkPermission
+    checkPermission,
+    // Dev/testing functions
+    setTestUserRole: handleSetTestUserRole,
+    isTestMode
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

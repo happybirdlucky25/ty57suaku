@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -13,7 +14,10 @@ import {
   Bell,
   ExternalLink,
   Eye,
-  Code
+  Code,
+  TestTube,
+  Crown,
+  Users
 } from 'lucide-react'
 
 interface PageLink {
@@ -27,6 +31,8 @@ interface PageLink {
 }
 
 export function AdminPage() {
+  const { userRole, setTestUserRole, isTestMode, user } = useAuth()
+
   const pages: PageLink[] = [
     {
       path: '/',
@@ -147,6 +153,99 @@ export function AdminPage() {
           Navigate to all pages for testing functionality and UI components
         </p>
       </div>
+
+      {/* Dev Testing Controls */}
+      <Card className="border-purple-200 bg-purple-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TestTube className="h-5 w-5 text-purple-600" />
+            Development Testing Controls
+          </CardTitle>
+          <CardDescription>
+            Switch user roles to test paid features without database changes
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Current Status */}
+            <div className="flex items-center justify-between p-4 bg-white rounded-lg border">
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5 text-gray-600" />
+                <div>
+                  <p className="font-medium text-gray-900">
+                    Current User: {user?.email || 'Not signed in'}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Role: {userRole} {isTestMode && '(Test Mode)'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Badge variant={userRole === 'paid' ? 'success' : 'secondary'}>
+                  {userRole === 'paid' ? 'Pro User' : 'Free User'}
+                </Badge>
+                {isTestMode && (
+                  <Badge variant="warning">Test Mode</Badge>
+                )}
+              </div>
+            </div>
+
+            {/* Role Toggle Buttons */}
+            <div className="flex gap-3">
+              <Button 
+                variant={userRole === 'free' && !isTestMode ? 'primary' : 'secondary'}
+                onClick={() => setTestUserRole('free')}
+                className="flex items-center gap-2"
+              >
+                <Users className="h-4 w-4" />
+                Test as Free User
+              </Button>
+              
+              <Button 
+                variant={userRole === 'paid' ? 'primary' : 'secondary'}
+                onClick={() => setTestUserRole('paid')}
+                className="flex items-center gap-2"
+              >
+                <Crown className="h-4 w-4" />
+                Test as Paid User
+              </Button>
+
+              {isTestMode && (
+                <Button 
+                  variant="ghost"
+                  onClick={() => setTestUserRole(userRole)}
+                  className="flex items-center gap-2"
+                >
+                  Reset to Actual Role
+                </Button>
+              )}
+            </div>
+
+            {/* Feature Access Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-3 bg-white rounded border">
+                <h4 className="font-medium text-gray-900 mb-2">Free User Features</h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Track bills and legislators</li>
+                  <li>• View AI summaries</li>
+                  <li>• Basic dashboard access</li>
+                  <li>• Search functionality</li>
+                </ul>
+              </div>
+              <div className="p-3 bg-white rounded border">
+                <h4 className="font-medium text-gray-900 mb-2">Paid User Features</h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• All free features +</li>
+                  <li>• Create campaigns</li>
+                  <li>• Generate custom reports</li>
+                  <li>• Team collaboration</li>
+                  <li>• Advanced analytics</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
