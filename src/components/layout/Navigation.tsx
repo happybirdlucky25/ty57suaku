@@ -1,10 +1,14 @@
 import { Link, useLocation } from 'react-router-dom'
-import { User, Search, FileText, LogOut } from 'lucide-react'
+import { User, Search, FileText, LogOut, Bell } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../ui/Button'
 import { Badge } from '../ui/Badge'
 
-export function Navigation() {
+interface NavigationProps {
+  onNotificationClick?: () => void
+}
+
+export function Navigation({ onNotificationClick }: NavigationProps) {
   const { userRole, signOut, isAuthenticated } = useAuth()
   const location = useLocation()
 
@@ -32,8 +36,41 @@ export function Navigation() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
+                Home
+              </Link>
+
+              <Link
+                to="/search"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  isActive('/search') 
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
                 <Search className="mr-2 h-4 w-4" />
-                Search Bills
+                Search
+              </Link>
+
+              <Link
+                to="/landing"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  isActive('/landing') 
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Landing
+              </Link>
+
+              <Link
+                to="/admin"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  isActive('/admin') 
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Admin
               </Link>
 
               {isAuthenticated && (
@@ -84,6 +121,16 @@ export function Navigation() {
             {/* Auth Section */}
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
+                {/* Notification Bell */}
+                <button
+                  onClick={onNotificationClick}
+                  className="relative text-gray-400 hover:text-gray-500 transition-colors"
+                >
+                  <Bell className="h-5 w-5" />
+                  {/* Notification Badge */}
+                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full animate-pulse"></span>
+                </button>
+                
                 <Link
                   to="/profile"
                   className="text-gray-400 hover:text-gray-500"

@@ -4,6 +4,9 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { SearchPage } from './pages/SearchPage'
+import { LandingPage } from './pages/LandingPage'
+import { AdminPage } from './pages/AdminPage'
 import './App.css'
 
 function App() {
@@ -11,8 +14,15 @@ function App() {
     <Layout>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<LoginPage />} />
+        <Route path="/admin" element={
+          <ProtectedRoute requiredRoles={['free', 'paid']}>
+            <AdminPage />
+          </ProtectedRoute>
+        } />
         
         <Route 
           path="/dashboard" 

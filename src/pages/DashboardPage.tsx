@@ -1,11 +1,26 @@
 import { useAuth } from '../contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
+import { Newsfeed } from '../components/Newsfeed'
 import { FileText, Users, TrendingUp, Bell } from 'lucide-react'
 
 export function DashboardPage() {
   const { user, userRole } = useAuth()
+  const navigate = useNavigate()
+
+  const handleSearchBills = () => {
+    navigate('/search?type=bills')
+  }
+
+  const handleFindLegislators = () => {
+    navigate('/search?type=legislators')
+  }
+
+  const handleCreateCampaign = () => {
+    navigate('/campaigns')
+  }
 
   return (
     <div className="space-y-6">
@@ -80,14 +95,14 @@ export function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
-            <Button variant="secondary">
+            <Button variant="secondary" onClick={handleSearchBills}>
               Search Bills
             </Button>
-            <Button variant="secondary">
+            <Button variant="secondary" onClick={handleFindLegislators}>
               Find Legislators
             </Button>
             {userRole === 'paid' && (
-              <Button>
+              <Button onClick={handleCreateCampaign}>
                 Create Campaign
               </Button>
             )}
@@ -95,22 +110,8 @@ export function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>
-            Your latest updates and notifications
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-gray-500">
-            <FileText className="mx-auto h-12 w-12 text-gray-300" />
-            <p className="mt-2">No recent activity</p>
-            <p className="text-sm">Start tracking bills to see updates here</p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Newsfeed */}
+      <Newsfeed />
 
       {/* Upgrade Prompt for Free Users */}
       {userRole === 'free' && (

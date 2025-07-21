@@ -60,10 +60,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
+
+        // Automatically create user profile for new signups  
+        if (event === 'SIGNED_IN' && session?.user && session.user.created_at === session.user.last_sign_in_at) {
+          try {
+            await supabase.from('user_profiles').insert({
+              user_id: session.user.id,
+              subscription_tier: 'free',
+              updated_at: new Date().toISOString()
+            })
+            console.log('User profile created successfully')
+          } catch (error) {
+            console.error('Failed to create user profile:', error)
+          }
+        }
       }
     )
 
