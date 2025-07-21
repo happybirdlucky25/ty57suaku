@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
@@ -8,7 +9,23 @@ import { Badge } from '../components/ui/Badge'
 
 export function HomePage() {
   const { userRole, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
+
+  const handleGetStarted = () => {
+    navigate('/login')
+  }
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      // For now, navigate to dashboard with search query
+      navigate(`/dashboard?search=${encodeURIComponent(searchQuery)}`)
+    }
+  }
+
+  const handleUpgrade = () => {
+    navigate('/pricing')
+  }
 
   return (
     <div className="space-y-8">
@@ -23,8 +40,8 @@ export function HomePage() {
         
         {!isAuthenticated && (
           <div className="mt-8 flex items-center justify-center gap-x-6">
-            <Button size="lg">Get Started Free</Button>
-            <Button variant="ghost" size="lg">Learn More</Button>
+            <Button size="lg" onClick={handleGetStarted}>Get Started Free</Button>
+            <Button variant="ghost" size="lg" onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}>Learn More</Button>
           </div>
         )}
       </div>
@@ -46,9 +63,10 @@ export function HomePage() {
               placeholder="Search for bills, legislators, or topics..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               className="flex-1"
             />
-            <Button>Search</Button>
+            <Button onClick={handleSearch}>Search</Button>
           </div>
         </CardContent>
       </Card>
@@ -107,7 +125,7 @@ export function HomePage() {
               <p className="mt-2 text-blue-700">
                 Upgrade to Pro to create campaigns, generate custom reports, and collaborate with your team.
               </p>
-              <Button className="mt-4" variant="primary">
+              <Button className="mt-4" variant="primary" onClick={handleUpgrade}>
                 Upgrade Now
               </Button>
             </div>
