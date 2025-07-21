@@ -1,8 +1,42 @@
-# React + TypeScript + Vite
+# Shadow Congress Build
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A civic tech platform for legislative tracking and AI-powered campaign management built with React, TypeScript, Vite, and Supabase.
 
-Currently, two official plugins are available:
+## Quick Start
+
+```bash
+# Install dependencies
+pnpm install
+
+# Set up environment variables
+cp .env.example .env
+# Add your Supabase credentials to .env
+
+# Start development server
+pnpm dev
+```
+
+## Project Structure
+
+```
+src/
+  ├── components/     # React components
+  ├── lib/           # Shared utilities and config
+  ├── assets/        # Static assets
+  └── types/         # TypeScript type definitions
+
+supabase/
+  ├── functions/     # Edge Functions
+  └── migrations/    # Database migrations
+```
+
+## Key Features
+
+- 🏛️ Legislative Tracking
+- 🤖 AI-Powered Analysis
+- 📊 Campaign Management
+- 👥 Team Collaboration
+- 📱 Real-time Updates
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
