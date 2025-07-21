@@ -25,7 +25,11 @@ export function ConnectionTest() {
         setEnvVars(vars.filter(v => import.meta.env[v]))
         
       } catch (err) {
-        setStatus(`Error: ${err instanceof Error ? err.message : String(err)} ❌`)
+        if (err instanceof Error) {
+          setStatus(`Error: ${err.message} ❌`)
+        } else {
+          setStatus(`Unexpected error: ${String(err)} ❌`)
+        }
       }
     }
 

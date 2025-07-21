@@ -8,7 +8,7 @@ export function SupabaseTest() {
   useEffect(() => {
     async function testConnection() {
       try {
-        const { error } = await supabase.auth.getSession()
+        const { data: _data, error } = await supabase.auth.getSession()
 
         if (error) {
           throw error
