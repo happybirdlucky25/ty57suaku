@@ -14,7 +14,9 @@
       "Bash(taskkill:*)",
       "Bash(git push:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": []
   }
