@@ -25,7 +25,7 @@ export function ConnectionTest() {
         setEnvVars(vars.filter(v => import.meta.env[v]))
         
       } catch (err) {
-        setStatus(`Error: ${err.message} ❌`)
+        setStatus(`Error: ${err instanceof Error ? err.message : String(err)} ❌`)
       }
     }
 
